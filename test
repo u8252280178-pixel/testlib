@@ -23,23 +23,24 @@ local Options = {};
 getgenv().Toggles = Toggles;
 getgenv().Options = Options;
 
--- ================== CUSTOM FONT LOADING ==================
-local function LoadCustomFont()
-    local fontPath = "MyScriptHub/ProggyClean.ttf"  -- Change if your folder/path is different
+-- ================== PROGGYCLEAN FONT LOADING ==================
+local function LoadProggyClean()
+    local fontPath = "MyScriptHub/ProggyClean.ttf"   -- Make sure the file is at Workspace/Linoria/ProggyClean.ttf
     
     if isfile and isfile(fontPath) then
         local success, font = pcall(function()
-            return getcustomasset(fontPath) or (getsynasset and getsynasset(fontPath))
+            return getcustomasset(fontPath)
         end)
         if success and font then
+            print("✅ ProggyClean font loaded successfully from Workspace!")
             return font
         end
     end
     
-    -- Fallback to default if font not found
-    warn("[Linoria] ProggyClean font not found at: " .. fontPath)
+    warn("⚠️ ProggyClean.ttf not found! Using fallback (Code font)")
     return Enum.Font.Code
 end
+-- ============================================================
 
 local Library = {
     Registry = {};
@@ -55,7 +56,7 @@ local Library = {
     RiskColor = Color3.fromRGB(255, 50, 50),
 
     Black = Color3.new(0, 0, 0);
-    Font = LoadCustomFont(),  -- ProggyClean from Workspace/Linoria folder
+    Font = LoadProggyClean(), -- ProggyClean Custom Font
 
     OpenedFrames = {};
     DependencyBoxes = {};
@@ -63,7 +64,6 @@ local Library = {
     Signals = {};
     ScreenGui = ScreenGui;
 };
--- ========================================================
 
 local RainbowStep = 0
 local Hue = 0
@@ -73,13 +73,8 @@ table.insert(Library.Signals, RenderStepped:Connect(function(Delta)
 
     if RainbowStep >= (1 / 60) then
         RainbowStep = 0
-
         Hue = Hue + (1 / 400);
-
-        if Hue > 1 then
-            Hue = 0;
-        end;
-
+        if Hue > 1 then Hue = 0; end;
         Library.CurrentRainbowHue = Hue;
         Library.CurrentRainbowColor = Color3.fromHSV(Hue, 0.8, 1);
     end
@@ -87,53 +82,35 @@ end))
 
 local function GetPlayersString()
     local PlayerList = Players:GetPlayers();
-
-    for i = 1, #PlayerList do
-        PlayerList[i] = PlayerList[i].Name;
-    end;
-
+    for i = 1, #PlayerList do PlayerList[i] = PlayerList[i].Name; end;
     table.sort(PlayerList, function(str1, str2) return str1 < str2 end);
-
     return PlayerList;
 end;
 
 local function GetTeamsString()
     local TeamList = Teams:GetTeams();
-
-    for i = 1, #TeamList do
-        TeamList[i] = TeamList[i].Name;
-    end;
-
+    for i = 1, #TeamList do TeamList[i] = TeamList[i].Name; end;
     table.sort(TeamList, function(str1, str2) return str1 < str2 end);
-    
     return TeamList;
 end;
 
 function Library:SafeCallback(f, ...)
-    if (not f) then return; end;
-    if not Library.NotifyOnError then return f(...); end;
-
+    if not f then return end;
+    if not Library.NotifyOnError then return f(...) end;
     local success, event = pcall(f, ...);
     if not success then
         local _, i = event:find(":%d+: ");
-        if not i then
-            return Library:Notify(event);
-        end;
-        return Library:Notify(event:sub(i + 1), 3);
+        return Library:Notify(i and event:sub(i + 1) or event, 3);
     end;
 end;
 
 function Library:AttemptSave()
-    if Library.SaveManager then
-        Library.SaveManager:Save();
-    end;
+    if Library.SaveManager then Library.SaveManager:Save(); end;
 end;
 
 function Library:Create(Class, Properties)
     local _Instance = Class;
-    if type(Class) == 'string' then
-        _Instance = Instance.new(Class);
-    end;
+    if type(Class) == 'string' then _Instance = Instance.new(Class); end;
     for Property, Value in next, Properties do
         _Instance[Property] = Value;
     end;
@@ -158,18 +135,13 @@ function Library:CreateLabel(Properties, IsHud)
         TextSize = 16;
         TextStrokeTransparency = 0;
     });
-
     Library:ApplyTextStroke(_Instance);
-
-    Library:AddToRegistry(_Instance, {
-        TextColor3 = 'FontColor';
-    }, IsHud);
-
+    Library:AddToRegistry(_Instance, { TextColor3 = 'FontColor'; }, IsHud);
     return Library:Create(_Instance, Properties);
 end;
 
--- [All other original functions remain unchanged...]
--- (ColorPicker, KeyPicker, Groupbox, Tab system, etc.)
+-- [All other functions from original Linoria are kept below]
+-- Make sure to paste the rest of your original library code here if it's longer.
 
 getgenv().Library = Library
 return Library
